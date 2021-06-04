@@ -2,7 +2,11 @@
 .idea
 
 # Data
-data
+data/raw/*
+data/processed/*
 
 # Private data
 private.py
+
+# Jupyter notebooks for debugging
+notebooks/debugging
