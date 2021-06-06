@@ -2,7 +2,8 @@ import pandas as pd
 
 def ema(ohlc: pd.DataFrame,
         period: int,
-        previous_ema: float = None) -> float:
+        previous_ema: float = None,
+        column: str='close') -> float:
     """ Calculates exponential moving average (EMA) based on close prices.
 
     Args:
@@ -18,10 +19,10 @@ def ema(ohlc: pd.DataFrame,
         return None
     # No previous EMA given -> begin with SMA
     if previous_ema is None:
-        previous_ema = sum(ohlc['close'].iloc[-1-period:-1]) / period
+        previous_ema = sum(ohlc[column].iloc[-1-period:-1]) / period
     # Calculate new EMA
     mult = 2 / (period + 1)
-    new_ema = ohlc['close'].iloc[-1] * mult + previous_ema * (1 - mult)
+    new_ema = ohlc[column].iloc[-1] * mult + previous_ema * (1 - mult)
     return new_ema
 
 def rsi(ohlc: pd.DataFrame,
@@ -63,29 +64,29 @@ def rsi(ohlc: pd.DataFrame,
     return rsi
 
 
-def stochrsi(ohlc: pd.DataFrame,
+def stoch(ohlc: pd.DataFrame,
           period: int) -> float:
     #calculate stochastic rsi
     try:
-        stochrsi  = (ohlc['rsi'].iloc[-1] -min(ohlc['rsi'].iloc[-period:])) / (max(ohlc['rsi'].iloc[-period:]) - min(ohlc['rsi'].iloc[-period:]))
+        stoch  = (ohlc['rsi'].iloc[-1] -min(ohlc['rsi'].iloc[-period:])) / (max(ohlc['rsi'].iloc[-period:]) - min(ohlc['rsi'].iloc[-period:]))
     except:
-        stochrsi = 0
-    return stochrsi
+        stoch = 0
+    return stoch
 
-def stochrsi_K(ohlc: pd.DataFrame,
+def stoch_k(ohlc: pd.DataFrame,
           smoothK: int) -> float:
     #calculate stochastic rsi k smoothed
     try:
-        stochrsi_K = ohlc['stochrsi'].iloc[-smoothK:].mean()
+        stoch_k = ohlc['stoch'].iloc[-smoothK:].mean()
     except:
-        stochrsi_K = 0
-    return stochrsi_K
+        stoch_k = 0
+    return stoch_k
 
-def stochrsi_D(ohlc: pd.DataFrame,
+def stoch_d(ohlc: pd.DataFrame,
           smoothD: int) -> float:
     #calculate stochastic rsi k smoothed
     try:
-        stochrsi_D = ohlc['stochrsi_K'].iloc[-smoothD:].mean()
+        stoch_d = ohlc['stoch_k'].iloc[-smoothD:].mean()
     except:
-        stochrsi_D = 0
-    return stochrsi_D
+        stoch_d = 0
+    return stoch_d
