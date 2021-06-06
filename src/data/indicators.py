@@ -26,7 +26,7 @@ def ema(ohlc: pd.DataFrame,
 
 def rsi(ohlc: pd.DataFrame,
         period: int,
-        column: str) -> float:
+        column: str='close') -> float:
     """ Calculates Relative Strength Index (RSI) based on close prices over last 'period' days
 
     Args:
