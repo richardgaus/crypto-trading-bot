@@ -25,7 +25,8 @@ def ema(ohlc: pd.DataFrame,
     return new_ema
 
 def rsi(ohlc: pd.DataFrame,
-        period: int) -> float:
+        period: int,
+        column: str) -> float:
     """ Calculates Relative Strength Index (RSI) based on close prices over last 'period' days
 
     Args:
@@ -43,12 +44,12 @@ def rsi(ohlc: pd.DataFrame,
     upPrices=[]
     downPrices=[]
     for idn in range(period, 0, -1):
-        if ohlc['close'].iloc[-idn]-ohlc['close'].iloc[-idn-1] > 0:
-            upPrices.append(ohlc['close'].iloc[-idn]-ohlc['close'].iloc[-idn-1])
+        if ohlc[column].iloc[-idn]-ohlc[column].iloc[-idn-1] > 0:
+            upPrices.append(ohlc[column].iloc[-idn]-ohlc[column].iloc[-idn-1])
             downPrices.append(0)
         else:
             upPrices.append(0)
-            downPrices.append(abs(ohlc['close'].iloc[-idn]-ohlc['close'].iloc[-idn-1]))
+            downPrices.append(abs(ohlc[column].iloc[-idn]-ohlc[column].iloc[-idn-1]))
     # averaging the advances and declines, rolling moving average
     avg_gain = sum(upPrices)/period
     avg_loss = sum(downPrices)/period
