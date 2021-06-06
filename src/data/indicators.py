@@ -62,46 +62,6 @@ def rsi(ohlc: pd.DataFrame,
     return rsi
 
 
-def rsi_idx(ohlc: pd.DataFrame,
-        period: int,
-        idx: int = None) -> float:
-    """ Calculates Relative Strength Index (RSI) based on close prices over last 'period' days
-
-    Args:
-        ohlc: Past OHLC timeseries data
-        period: Period of RSI
-        idx: index of data frame
-
-    Returns:
-        Value of RSI for index idx
-    """
-    # Begin of Data Frame
-    if idx < period:
-        rsi = 0
-    # calculating up and down moves
-    upPrices=[]
-    downPrices=[]
-    for idn in range(period, 0, -1):
-        if ohlc['close'].iloc[idx-idn]-ohlc['close'].iloc[idx-idn-1] > 0:
-            upPrices.append(ohlc['close'].iloc[idx-idn]-ohlc['close'].iloc[idx-idn-1])
-            downPrices.append(0)
-        else:
-            upPrices.append(0)
-            downPrices.append(abs(ohlc['close'].iloc[idx-idn]-ohlc['close'].iloc[idx-idn-1]))
-    # averaging the advances and declines, rolling moving average
-    avg_gain = sum(upPrices)/period
-    avg_loss = sum(downPrices)/period
-    #calculating relative strength
-    if avg_loss != 0:
-        rs = avg_gain/avg_loss
-    else:
-        rs = 0
-    #calculating RSI
-    if rs != -1:
-        rsi = 100-(100/(1+rs))
-    else: rsi=0
-    return rsi
-
 def stochrsi(ohlc: pd.DataFrame,
           period: int) -> float:
     #calculate stochastic rsi
@@ -128,21 +88,3 @@ def stochrsi_D(ohlc: pd.DataFrame,
     except:
         stochrsi_D = 0
     return stochrsi_D
-
-def stoch_old(ohlc: pd.DataFrame,
-          percentageK: int,
-          percentageD: int) -> dict:
-
-    #stochastic rsi k value
-    try:
-        stoch_rsi_k = (ohlc['rsi'].iloc[-1]-min(ohlc['rsi'].iloc[-percentageK:]))/(max(ohlc['rsi'].iloc[-percentageK:])-min(ohlc['rsi'].iloc[-percentageK:]))
-    except:
-        stoch_rsi_k = 0
-    #stochastic rsi d value, moving average
-    try:
-        stoch_rsi_d = (sum(ohlc['stoch_rsi_k'].iloc[-percentageD + 1:]) + stoch_rsi_k) / percentageD
-    except:
-        stoch_rsi_d = stoch_rsi_k
-    # merge stoch_rsi
-    stoch_rsi = {'stoch_rsi_k': stoch_rsi_k, 'stoch_rsi_d': stoch_rsi_d }
-    return stoch_rsi
