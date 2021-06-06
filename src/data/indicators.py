@@ -39,12 +39,12 @@ def rsi(ohlc: pd.DataFrame,
         Value of RSI for index idx
     """
     # Begin of Data Frame
-    if len(ohlc) < period+1:
+    if len(ohlc) < period+2:
         return None
     # calculating up and down moves
     upPrices=[]
     downPrices=[]
-    for idn in range(period, 0, -1):
+    for idn in range(period+1, 1, -1): #period-1, -1, -1 -> 13....0 // period+1, +1, -1 -> 15....2
         if ohlc[column].iloc[-idn]-ohlc[column].iloc[-idn-1] > 0:
             upPrices.append(ohlc[column].iloc[-idn]-ohlc[column].iloc[-idn-1])
             downPrices.append(0)
@@ -67,26 +67,35 @@ def rsi(ohlc: pd.DataFrame,
 def stoch(ohlc: pd.DataFrame,
           period: int) -> float:
     #calculate stochastic rsi
-    try:
-        stoch  = (ohlc['rsi'].iloc[-1] -min(ohlc['rsi'].iloc[-period:])) / (max(ohlc['rsi'].iloc[-period:]) - min(ohlc['rsi'].iloc[-period:]))
-    except:
-        stoch = 0
+    # There are fewer data points than period length -> return None
+    if len(ohlc) < period:
+        return None
+    #try:
+    stoch  = (ohlc['rsi'].iloc[-1] -min(ohlc['rsi'].iloc[-period:])) / (max(ohlc['rsi'].iloc[-period:]) - min(ohlc['rsi'].iloc[-period:]))
+    #except:
+       # stoch = 0
     return stoch
 
 def stoch_k(ohlc: pd.DataFrame,
           smoothK: int) -> float:
+    # There are fewer data points than period length -> return None
+    if len(ohlc) < smoothK:
+        return None
     #calculate stochastic rsi k smoothed
-    try:
-        stoch_k = ohlc['stoch'].iloc[-smoothK:].mean()
-    except:
-        stoch_k = 0
+    #try:
+    stoch_k = ohlc['stoch'].iloc[-smoothK:].mean()
+    #except:
+    #   stoch_k = 0
     return stoch_k
 
 def stoch_d(ohlc: pd.DataFrame,
           smoothD: int) -> float:
+    # There are fewer data points than period length -> return None
+    if len(ohlc) < smoothD:
+        return None
     #calculate stochastic rsi k smoothed
-    try:
-        stoch_d = ohlc['stoch_k'].iloc[-smoothD:].mean()
-    except:
-        stoch_d = 0
+    #try:
+    stoch_d = ohlc['stoch_k'].iloc[-smoothD:].mean()
+    #except:
+    #    stoch_d = 0
     return stoch_d
