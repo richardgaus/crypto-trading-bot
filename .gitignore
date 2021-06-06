@@ -11,3 +11,6 @@ private.py
 
 # Jupyter notebooks for debugging
 notebooks/debugging
+
+# pycache
+*/__pycache__/*
