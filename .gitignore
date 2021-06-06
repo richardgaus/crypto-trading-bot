@@ -4,6 +4,7 @@
 # Data
 data/raw/*
 data/processed/*
+!data/raw/BTCUSDT.csv
 
 # Private data
 private.py
