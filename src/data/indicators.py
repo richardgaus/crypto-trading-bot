@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 def ema(ohlc: pd.DataFrame,
         period: int,
@@ -16,7 +17,7 @@ def ema(ohlc: pd.DataFrame,
     """
     # There are fewer data points than period length -> return None
     if len(ohlc) < period:
-        return None
+        return np.nan
     # No previous EMA given -> begin with SMA
     if previous_ema is None:
         previous_ema = sum(ohlc[column].iloc[-1-period:-1]) / period
@@ -39,28 +40,65 @@ def rsi(ohlc: pd.DataFrame,
         Value of RSI for index idx
     """
     # Begin of Data Frame
-    if len(ohlc) < period+2:
-        return None
+    if len(ohlc) < period+1:
+        return np.nan
     # calculating up and down moves
+    #change = []
+    #for idn in range(period, 0, -1):
+    #    change.append(ohlc[column].iloc[-idn]-ohlc[column].iloc[-idn-1])
+
+
+    #up = max(change, 0).mean()
+    #down = -min(change, 0).mean()
+
+    #rsi = 0
+    #if down == 0:
+    #    rsi = 100
+    #else:
+    #    if up == 0:
+    #        rsi = 0
+    #    else:
+    #        rsi = 100 - (100 / (1 + up / down))
+
+
     upPrices=[]
     downPrices=[]
-    for idn in range(period+1, 1, -1): #period-1, -1, -1 -> 13....0 // period+1, +1, -1 -> 15....2
+    for idn in range(period, 0, -1): #period-1, -1, -1 -> 13....0 // period+1, +1, -1 -> 15....2
         if ohlc[column].iloc[-idn]-ohlc[column].iloc[-idn-1] > 0:
             upPrices.append(ohlc[column].iloc[-idn]-ohlc[column].iloc[-idn-1])
             downPrices.append(0)
         else:
             upPrices.append(0)
             downPrices.append(abs(ohlc[column].iloc[-idn]-ohlc[column].iloc[-idn-1]))
-    # averaging the advances and declines, rolling moving average
-    avg_gain = sum(upPrices)/period
-    avg_loss = sum(downPrices)/period
+    # averaging the advances and declines, expoentially weighted moving average
+
+
+
+    up = 0
+    down = 0
+    alpha = 1 / period
+    for idn in range(period-1, -1, -1):
+        up = alpha * (1-alpha)**(period-idn-1) * upPrices[idn] + up
+        down = alpha * (1 - alpha)**(period-idn-1) * downPrices[idn] + down
+
+    #up = sum(upPrices)/period
+    #down = sum(downPrices)/period
     #calculating relative strength
-    if avg_loss != 0:
-        rs = avg_gain/avg_loss
+    rsi = 0
+    if down == 0:
+       rsi = 100
     else:
-        rs = 50
-    #calculating RSI
-    rsi = 100-(100/(1+rs))
+       if up == 0:
+           rsi = 0
+       else:
+           rsi = 100 - (100 / (1 + up / down))
+
+    #if avg_loss != 0:
+    #    rs = avg_gain/avg_loss
+    #else:
+    #    rs = 50
+    # calculating RSI
+    #rsi = 100-(100/(1+rs))
     return rsi
 
 
@@ -69,7 +107,7 @@ def stoch(ohlc: pd.DataFrame,
     #calculate stochastic rsi
     # There are fewer data points than period length -> return None
     if len(ohlc) < period:
-        return None
+        return np.nan
     #try:
     stoch  = (ohlc['rsi'].iloc[-1] -min(ohlc['rsi'].iloc[-period:])) / (max(ohlc['rsi'].iloc[-period:]) - min(ohlc['rsi'].iloc[-period:]))
     #except:
@@ -80,7 +118,7 @@ def stoch_k(ohlc: pd.DataFrame,
           smoothK: int) -> float:
     # There are fewer data points than period length -> return None
     if len(ohlc) < smoothK:
-        return None
+        return np.nan
     #calculate stochastic rsi k smoothed
     #try:
     stoch_k = ohlc['stoch'].iloc[-smoothK:].mean()
