@@ -39,67 +39,21 @@ def rsi(ohlc: pd.DataFrame,
     Returns:
         Value of RSI for index idx
     """
-    # Begin of Data Frame
-    if len(ohlc) < period+1:
-        return np.nan
-    # calculating up and down moves
-    #change = []
-    #for idn in range(period, 0, -1):
-    #    change.append(ohlc[column].iloc[-idn]-ohlc[column].iloc[-idn-1])
+    delta = ohlc[column].diff()
 
+    up = delta.copy()
+    up[up < 0] = 0
+    up = pd.Series.ewm(up, alpha=1/period).mean()
 
-    #up = max(change, 0).mean()
-    #down = -min(change, 0).mean()
-
-    #rsi = 0
-    #if down == 0:
-    #    rsi = 100
-    #else:
-    #    if up == 0:
-    #        rsi = 0
-    #    else:
-    #        rsi = 100 - (100 / (1 + up / down))
-
-
-    upPrices=[]
-    downPrices=[]
-    for idn in range(period, 0, -1): #period-1, -1, -1 -> 13....0 // period+1, +1, -1 -> 15....2
-        if ohlc[column].iloc[-idn]-ohlc[column].iloc[-idn-1] > 0:
-            upPrices.append(ohlc[column].iloc[-idn]-ohlc[column].iloc[-idn-1])
-            downPrices.append(0)
-        else:
-            upPrices.append(0)
-            downPrices.append(abs(ohlc[column].iloc[-idn]-ohlc[column].iloc[-idn-1]))
-    # averaging the advances and declines, expoentially weighted moving average
-
-
-
-    up = 0
-    down = 0
-    alpha = 1 / period
-    for idn in range(period-1, -1, -1):
-        up = alpha * (1-alpha)**(period-idn-1) * upPrices[idn] + up
-        down = alpha * (1 - alpha)**(period-idn-1) * downPrices[idn] + down
-
-    #up = sum(upPrices)/period
-    #down = sum(downPrices)/period
-    #calculating relative strength
-    rsi = 0
-    if down == 0:
-       rsi = 100
-    else:
-       if up == 0:
-           rsi = 0
-       else:
-           rsi = 100 - (100 / (1 + up / down))
-
-    #if avg_loss != 0:
-    #    rs = avg_gain/avg_loss
-    #else:
-    #    rs = 50
-    # calculating RSI
-    #rsi = 100-(100/(1+rs))
+    down = delta.copy()
+    down[down > 0] = 0
+    down *= -1
+    down = pd.Series.ewm(down, alpha=1/period).mean()
+    up = up
+    down = down
+    rsi = np.where(down == 0, 100, np.where(up == 0, 0, 100 - (100 / (1 + up / down))))
     return rsi
+
 
 
 def stoch(ohlc: pd.DataFrame,
@@ -120,10 +74,7 @@ def stoch_k(ohlc: pd.DataFrame,
     if len(ohlc) < smoothK:
         return np.nan
     #calculate stochastic rsi k smoothed
-    #try:
     stoch_k = ohlc['stoch'].iloc[-smoothK:].mean()
-    #except:
-    #   stoch_k = 0
     return stoch_k
 
 def stoch_d(ohlc: pd.DataFrame,
@@ -132,8 +83,5 @@ def stoch_d(ohlc: pd.DataFrame,
     if len(ohlc) < smoothD:
         return None
     #calculate stochastic rsi k smoothed
-    #try:
     stoch_d = ohlc['stoch_k'].iloc[-smoothD:].mean()
-    #except:
-    #    stoch_d = 0
     return stoch_d
