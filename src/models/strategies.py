@@ -21,6 +21,9 @@ class StrategyResults(ABC):
     def plot(self):
         pass
 
+    def evaluation(self):
+        pass
+
     def set_pnl(self,
                 pnl: float):
         self._pnl = pnl
@@ -185,3 +188,41 @@ class RSIStoch200EMAResults(StrategyResults):
         self.ema200 = ema200
         self.rsi = rsi
         self.stoch = stoch
+
+    def evaluation(self,
+                 start_time: pd.Timestamp,
+                 end_time: pd.Timestamp):
+        data = self.ohlcv[start_time:end_time]
+        total_trades = 0
+        winners = 0
+        losses = 0
+        win_percentage = 0
+        max_losses = 0
+        max_wins = 0
+        max_losses_tmp = 0
+        max_wins_tmp = 0
+        gain = 0
+        for i, (trade, pattern) in enumerate(zip(self.trades, self.patterns)):
+            total_trades = total_trades + 1
+            if trade['win']:
+                winners = winners + 1
+                gain = gain + (trade['take_profit'] - trade['entry_price'])/trade['entry_price']
+                max_wins_tmp = max_wins_tmp + 1
+                max_losses_tmp = 0
+            else:
+                losses = losses + 1
+                gain = gain + (trade['entry_price'] - trade['stop_loss'])/trade['entry_price']
+                max_wins_tmp = 0
+                max_losses_tmp = max_losses_tmp + 1
+
+            max_wins = max(max_wins_tmp, max_wins)
+            max_losses = max(max_losses_tmp, max_losses)
+
+        if total_trades > 0:
+            win_percentage = winners/total_trades
+        else:
+            win_percentage = 0
+
+        data_table = ['Total Trades:', total_trades, winners, losses, win_percentage, max_wins, max_losses, gain]
+        column_labels = ['Total Trades', 'Winners', 'Losses', 'Win Percentage', 'Max Wins', 'Max Losses', 'Overall Gain']
+        print(' Total Trades:', total_trades,'\n','Winners:', winners,'\n','Losses:', losses,'\n','Win Percentage:', win_percentage,'\n','Max Wins:', max_wins,'\n','Max Losses:', max_losses,'\n','Overall Gain:', gain,'\n',)
