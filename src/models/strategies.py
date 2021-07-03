@@ -20,7 +20,8 @@ class StrategyResults(ABC):
 
     def __init__(self,
                  asset_name: str,
-                 ohlcv_timeseries: pd.DataFrame):
+                 ohlcv_timeseries: pd.DataFrame,
+                 *args, **kwargs):
         self.asset_name = asset_name
         self.ohlcv = ohlcv_timeseries
         self.trades = []
@@ -131,7 +132,8 @@ class RSIStoch200EMA(Strategy):
 
         results = RSIStoch200EMAResults(
             asset_name=asset_name,
-            ohlcv_timeseries=ohlcv_timeseries
+            ohlcv_timeseries=ohlcv_timeseries,
+            max_number_open_trades=self.max_number_open_trades
         )
 
         for idx in range(1, len(ohlcv_timeseries) - 1):
@@ -325,16 +327,15 @@ class RSIStoch200EMAResults(StrategyResults):
 
     def __init__(self,
                  asset_name: str,
-                 ohlcv_timeseries: pd.DataFrame):
+                 ohlcv_timeseries: pd.DataFrame,
+                 max_number_open_trades: int):
         super().__init__(asset_name, ohlcv_timeseries)
-        self.ema200 = None
-        self.rsi = None
-        self.stoch = None
+        self.max_number_open_trades = max_number_open_trades
         self.patterns = []
 
     def plot(self,
-             start_time: pd.Timestamp,
-             end_time: pd.Timestamp):
+             start_time: pd.Timestamp=None,
+             end_time: pd.Timestamp=None):
         data = self.ohlcv[start_time:end_time]
         fig, axes = mpl.pyplot.subplots(
             4, 1,
@@ -450,12 +451,9 @@ class RSIStoch200EMAResults(StrategyResults):
         }
         self.patterns.append(_signal)
 
-    def evaluation(self,
-                   start_time: pd.Timestamp,
-                   end_time: pd.Timestamp):
+    def evaluation(self):
         data = self.ohlcv[start_time:end_time]
-        #print(self.ohlcv['low'])
-        buy_hold = (data['low'].iloc[-1] - data['low'].iloc[1])/data['low'].iloc[1]
+
         days = end_time - start_time
         total_trades = 0
         winners = 0
