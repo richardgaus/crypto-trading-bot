@@ -332,7 +332,7 @@ class RSIStoch200EMAResults(StrategyResults):
         super().__init__(asset_name, ohlcv_timeseries)
         self.max_number_open_trades = max_number_open_trades
         self.patterns = []
-        self.stats = {}
+        self.eval_stats = {}
 
     def plot(self,
              start_time: pd.Timestamp=None,
