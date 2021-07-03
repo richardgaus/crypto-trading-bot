@@ -464,22 +464,33 @@ class RSIStoch200EMAResults(StrategyResults):
         max_losses_tmp = 0
         max_wins_tmp = 0
         gain = 0
+        gain_win = []
+        gain_loss = []
+        gain_list = []
         for i, (trade, pattern) in enumerate(zip(self.trades, self.patterns)):
             total_trades = total_trades + 1
             if trade['win']:
                 winners = winners + 1
                 if (trade['take_profit'] - trade['entry_price']) > 0:
                     gain = gain + (trade['take_profit'] - trade['entry_price'])/trade['entry_price']
+                    gain_win.append((trade['take_profit'] - trade['entry_price'])/trade['entry_price'])
+                    gain_list.append((trade['take_profit'] - trade['entry_price'])/trade['entry_price'])
                 else:
                     gain = gain + (trade['entry_price'] - trade['take_profit']) / trade['entry_price']
+                    gain_win.append((trade['entry_price'] - trade['take_profit']) / trade['entry_price'])
+                    gain_list.append((trade['entry_price'] - trade['take_profit']) / trade['entry_price'])
                 max_wins_tmp = max_wins_tmp + 1
                 max_losses_tmp = 0
             else:
                 losses = losses + 1
                 if (trade['entry_price'] - trade['stop_loss']) < 0:
                     gain = gain + (trade['entry_price'] - trade['stop_loss'])/trade['entry_price']
+                    gain_loss.append((trade['entry_price'] - trade['stop_loss'])/trade['entry_price'])
+                    gain_list.append((trade['entry_price'] - trade['stop_loss'])/trade['entry_price'])
                 else:
                     gain = gain + (trade['stop_loss'] - trade['entry_price']) / trade['entry_price']
+                    gain_loss.append((trade['stop_loss'] - trade['entry_price'])/trade['entry_price'])
+                    gain_list.append((trade['stop_loss'] - trade['entry_price'])/trade['entry_price'])
                 max_wins_tmp = 0
                 max_losses_tmp = max_losses_tmp + 1
 
@@ -492,4 +503,27 @@ class RSIStoch200EMAResults(StrategyResults):
         else:
             win_percentage = 0
 
+        gain_win1 = pd.DataFrame(gain_win)
+        gain_loss1 = pd.DataFrame(gain_loss)
+        gain_avg = sum(gain_win) + sum(gain_loss)
+        win_05quant = gain_win1.quantile(.5)
+        loss_05quant = gain_loss1.quantile(.5)
+        win_mean = gain_win1.mean()
+        loss_mean = gain_loss1.mean()
+
+
+        gain_df = pd.DataFrame(gain_list, columns=['values'])
+        #print(gain_df)
+        gain_df['positive'] = gain_df['values'] > 0
+        ax = gain_df['values'].plot(kind='bar',color=gain_df.positive.map({True: 'g', False: 'r'}))
+        ax.hlines(float(win_05quant.to_numpy()), ax.get_xticks().min(), ax.get_xticks().max(), linestyle='--', color='black')
+        ax.hlines(float(win_mean.to_numpy()), ax.get_xticks().min(), ax.get_xticks().max(), linestyle='-', color='black')
+        ax.hlines(float(loss_05quant.to_numpy()), ax.get_xticks().min(), ax.get_xticks().max(), linestyle='--', color='black')
+        ax.hlines(float(loss_mean.to_numpy()), ax.get_xticks().min(), ax.get_xticks().max(), linestyle='-', color='black')
+        ax.set_ylabel("Gain")
+        ax.set_xlabel("Trade")
+        ax.legend([".5 quantile", "mean"]);
+
+        #print(float(win_05quant.to_numpy()))
+        print(' Win quantile0.5:', float(win_05quant.to_numpy()),'\n','Win mean:', float(win_mean.to_numpy()),'\n','Loss quantile0.5:', float(loss_05quant.to_numpy()),'\n','Loss mean:', float(loss_mean.to_numpy()),'\n','Gain avg:', gain_avg,'\n',)
         print(' Buy&Hold', buy_hold,'\n','Days:',days.days,'\n','Total Trades:', total_trades,'\n','Winners:', winners,'\n','Losses:', losses,'\n','Win Percentage:', win_percentage,'\n','Max Wins:', max_wins,'\n','Max Losses:', max_losses,'\n','Overall Gain:', gain,'\n',)
