@@ -452,6 +452,53 @@ class RSIStoch200EMAResults(StrategyResults):
         self.patterns.append(_signal)
 
     def evaluation(self):
+        total = 1.0
+        num_positions = 0
+        # Convert trades to chronology of buy/sell events
+        events = []
+        for t in self.trades:
+            # Calculate profit and loss of individual trade
+            if t['win']:
+                if t['entry_price'] > t['take_profit']:  # short trade
+                    pnl = - (t['take_profit'] / t['entry_price'] - 1.0)
+                else:  # long trade
+                    pnl = t['take_profit'] / t['entry_price'] - 1.0
+            else:
+                if t['entry_price'] < t['stop_loss']:  # short trade
+                    pnl = - (t['stop_loss'] / t['entry_price'] - 1.0)
+                else:  # long trade
+                    pnl = t['stop_loss'] / t['entry_price'] - 1.0
+            events.append({
+                'timestamp': t['entry_time'],
+                'event': 'entry',
+                'entry_time': t['entry_time'],
+                'pnl': pnl,
+                'investment': np.NaN
+            })
+            events.append({
+                'timestamp': t['exit_time'],
+                'event': 'exit',
+                'entry_time': t['entry_time'],
+                'pnl': pnl
+            })
+            events_df = pd.DataFrame(events)
+            events_df = events_df.sort_values(
+                by=['timestamp', 'event'], ascending=[True, False]
+            ).reset_index()
+
+        for idx, row in events_df.iterrows():
+            if row['event'] == 'entry':
+                investment = total / (self.max_number_open_trades - num_positions)
+                events_df.loc[idx, 'investment'] = investment
+                total -= investment
+                num_positions += 1
+            elif row['event'] == 'exit':
+                total += events_df[
+                             (events_df['entry_time'] == row['entry_time']) & \
+                             (events_df['event'] == 'entry')
+                             ]['investment'].iloc[0] * (1.0 + row['pnl'])
+                num_positions -= 1
+
         data = self.ohlcv[start_time:end_time]
 
         days = end_time - start_time
