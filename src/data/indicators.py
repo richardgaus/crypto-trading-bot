@@ -56,6 +56,31 @@ def rsi(ohlc: pd.DataFrame,
 
 
 
+def stochRSI(ohlc: pd.DataFrame, period: int,  smoothK: int, smoothD: int, column: str='close'):
+    rsi1 = rsi(ohlc, period, column)
+    rsi2 = pd.DataFrame(rsi1)
+    stochrsi  = (rsi2 - rsi2.rolling(period).min()) / (rsi2.rolling(period).max() - rsi2.rolling(period).min())
+    stochrsi_K = stochrsi.rolling(smoothK).mean()
+    stochrsi_D = stochrsi_K.rolling(smoothD).mean()
+    return stochrsi, stochrsi_K, stochrsi_D
+
+###bad
+def stochastic(data, k_window, d_window, window):
+    # input to function is one column from df
+    # containing closing price or whatever value we want to extract K and D from
+
+    min_val = data.rolling(window=window, center=False).min()
+    max_val = data.rolling(window=window, center=False).max()
+
+    #stoch = ((data - min_val) / (max_val - min_val)) * 100
+
+    K = stoch.rolling(window=k_window, center=False).mean()
+    # K = stoch
+
+    D = K.rolling(window=d_window, center=False).mean()
+
+    return K, D
+
 def stoch(ohlc: pd.DataFrame,
           period: int) -> float:
     #calculate stochastic rsi
