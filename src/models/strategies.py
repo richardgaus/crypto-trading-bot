@@ -56,6 +56,56 @@ class StrategyResults(ABC):
         }
         self.trades.append(_trade)
 
+class BuyAndHold(Strategy):
+
+    def __init__(self):
+        super().__init__(max_number_open_trades=1)
+
+    def apply(self,
+              ohlcv_timeseries: pd.DataFrame,
+              asset_name: str=None) -> 'BuyAndHoldResults':
+        results = BuyAndHoldResults(
+            asset_name=asset_name,
+            ohlcv_timeseries=ohlcv_timeseries
+        )
+        entry = ohlcv_timeseries.iloc[0]['close']
+        exit = ohlcv_timeseries.iloc[-1]['close']
+        results.add_trade(
+            entry_time=ohlcv_timeseries.iloc[0].name,
+            entry_price=entry,
+            take_profit=exit,
+            stop_loss=exit,
+            exit_time=ohlcv_timeseries.iloc[-1].name,
+            win=exit > entry
+        )
+
+        return results
+
+class BuyAndHoldResults(StrategyResults):
+
+    def __init__(self,
+                 asset_name: str,
+                 ohlcv_timeseries: pd.DataFrame):
+        super().__init__(
+            asset_name=asset_name,
+            ohlcv_timeseries=ohlcv_timeseries
+        )
+
+    def plot(self):
+        pass
+
+    def evaluation(self):
+        pnl = self.trades[0]['take_profit'] / self.trades[0]['entry_price'] - 1.0
+        self.set_pnl(pnl)
+
+    def set_pnl(self,
+                pnl: float):
+        self._pnl = pnl
+
+    @property
+    def pnl(self):
+        return self._pnl
+
 class RSIStoch200EMA(Strategy):
 
     def __init__(self,
@@ -78,8 +128,6 @@ class RSIStoch200EMA(Strategy):
         open_trades_exit_times = []
         true_divergence = None
         wait_for_stoch_cross = False
-        current_pattern = {}
-        current_trade = {}
 
         results = RSIStoch200EMAResults(
             asset_name=asset_name,
