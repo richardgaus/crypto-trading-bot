@@ -406,6 +406,9 @@ class RSIStoch200EMAResults(StrategyResults):
                    start_time: pd.Timestamp,
                    end_time: pd.Timestamp):
         data = self.ohlcv[start_time:end_time]
+        #print(self.ohlcv['low'])
+        buy_hold = (data['low'].iloc[-1] - data['low'].iloc[1])/data['low'].iloc[1]
+        days = end_time - start_time
         total_trades = 0
         winners = 0
         losses = 0
@@ -419,23 +422,28 @@ class RSIStoch200EMAResults(StrategyResults):
             total_trades = total_trades + 1
             if trade['win']:
                 winners = winners + 1
-                gain = gain + (trade['take_profit'] - trade['entry_price'])/trade['entry_price']
+                if (trade['take_profit'] - trade['entry_price']) > 0:
+                    gain = gain + (trade['take_profit'] - trade['entry_price'])/trade['entry_price']
+                else:
+                    gain = gain + (trade['entry_price'] - trade['take_profit']) / trade['entry_price']
                 max_wins_tmp = max_wins_tmp + 1
                 max_losses_tmp = 0
             else:
                 losses = losses + 1
-                gain = gain + (trade['entry_price'] - trade['stop_loss'])/trade['entry_price']
+                if (trade['entry_price'] - trade['stop_loss']) < 0:
+                    gain = gain + (trade['entry_price'] - trade['stop_loss'])/trade['entry_price']
+                else:
+                    gain = gain + (trade['stop_loss'] - trade['entry_price']) / trade['entry_price']
                 max_wins_tmp = 0
                 max_losses_tmp = max_losses_tmp + 1
 
             max_wins = max(max_wins_tmp, max_wins)
             max_losses = max(max_losses_tmp, max_losses)
+            #print(trade['win'])
 
         if total_trades > 0:
             win_percentage = winners/total_trades
         else:
             win_percentage = 0
 
-        data_table = ['Total Trades:', total_trades, winners, losses, win_percentage, max_wins, max_losses, gain]
-        column_labels = ['Total Trades', 'Winners', 'Losses', 'Win Percentage', 'Max Wins', 'Max Losses', 'Overall Gain']
-        print(' Total Trades:', total_trades,'\n','Winners:', winners,'\n','Losses:', losses,'\n','Win Percentage:', win_percentage,'\n','Max Wins:', max_wins,'\n','Max Losses:', max_losses,'\n','Overall Gain:', gain,'\n',)
+        print(' Buy&Hold', buy_hold,'\n','Days:',days.days,'\n','Total Trades:', total_trades,'\n','Winners:', winners,'\n','Losses:', losses,'\n','Win Percentage:', win_percentage,'\n','Max Wins:', max_wins,'\n','Max Losses:', max_losses,'\n','Overall Gain:', gain,'\n',)
