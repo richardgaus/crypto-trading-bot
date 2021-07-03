@@ -453,7 +453,7 @@ class RSIStoch200EMAResults(StrategyResults):
         self.patterns.append(_signal)
 
     def evaluation(self):
-        total = 1.0
+        budget = 1.0
         num_positions = 0
         # Convert trades to chronology of buy/sell events
         events = []
@@ -473,6 +473,7 @@ class RSIStoch200EMAResults(StrategyResults):
                 'timestamp': t['entry_time'],
                 'event': 'entry',
                 'entry_time': t['entry_time'],
+                'exit_time': t['exit_time'],
                 'pnl': pnl,
                 'investment': np.NaN
             })
@@ -487,18 +488,22 @@ class RSIStoch200EMAResults(StrategyResults):
                 by=['timestamp', 'event'], ascending=[True, False]
             ).reset_index()
 
+        pnl_history = pd.Series(index=self.ohlcv.index)
         for idx, row in events_df.iterrows():
             if row['event'] == 'entry':
-                investment = total / (self.max_number_open_trades - num_positions)
+                investment = budget / (self.max_number_open_trades - num_positions)
                 events_df.loc[idx, 'investment'] = investment
-                total -= investment
+                budget -= investment
                 num_positions += 1
             elif row['event'] == 'exit':
-                total += events_df[
+                budget += events_df[
                              (events_df['entry_time'] == row['entry_time']) & \
                              (events_df['event'] == 'entry')
                              ]['investment'].iloc[0] * (1.0 + row['pnl'])
                 num_positions -= 1
+
+        #self.set_pnl(total)
+        #self.eval_stats['pnl_history'] =
 
         data = self.ohlcv[start_time:end_time]
 
