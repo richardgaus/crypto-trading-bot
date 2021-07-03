@@ -57,12 +57,24 @@ def rsi(ohlc: pd.DataFrame,
 
 
 def stochRSI(ohlc: pd.DataFrame, period: int,  smoothK: int, smoothD: int, column: str='close'):
+    """ Calculates Stochastic RSI based last 'period' days
+
+      Args:
+          ohlc: Past OHLC timeseries data
+          period: Period of RSI
+          smoothK: smoothing factor K index
+          smoothD: smoothing factor D index
+          columns: price type
+
+      Returns:
+          Value of stochRSI
+      """
     rsi1 = rsi(ohlc, period, column)
     rsi2 = pd.DataFrame(rsi1)
     stochrsi  = (rsi2 - rsi2.rolling(period).min()) / (rsi2.rolling(period).max() - rsi2.rolling(period).min())
     stochrsi_K = stochrsi.rolling(smoothK).mean()
     stochrsi_D = stochrsi_K.rolling(smoothD).mean()
-    return stochrsi, stochrsi_K, stochrsi_D
+    return stochrsi_K.to_numpy(), stochrsi_D.to_numpy()
 
 ###bad
 def stochastic(data, k_window, d_window, window):
