@@ -3,28 +3,20 @@ import numpy as np
 
 def ema(ohlc: pd.DataFrame,
         period: int,
-        previous_ema: float = None,
-        column: str='close') -> float:
+        column: str='close')  -> float:
     """ Calculates exponential moving average (EMA) based on close prices.
 
     Args:
         ohlc: Past OHLC timeseries data
         period: Period of EMA
-        previous_ema: Previous value of EMA
+        columns: price type
 
     Returns:
-        New value of EMA
+        EMA
     """
-    # There are fewer data points than period length -> return None
-    if len(ohlc) < period:
-        return np.nan
-    # No previous EMA given -> begin with SMA
-    if previous_ema is None:
-        previous_ema = sum(ohlc[column].iloc[-1-period:-1]) / period
-    # Calculate new EMA
-    mult = 2 / (period + 1)
-    new_ema = ohlc[column].iloc[-1] * mult + previous_ema * (1 - mult)
-    return new_ema
+    ema = ohlc[column].ewm(span=period, adjust=False).mean()
+
+    return ema
 
 def rsi(ohlc: pd.DataFrame,
         period: int,
@@ -34,7 +26,7 @@ def rsi(ohlc: pd.DataFrame,
     Args:
         ohlc: Past OHLC timeseries data
         period: Period of RSI
-        idx: index of data frame
+        columns: price type
 
     Returns:
         Value of RSI for index idx
@@ -75,50 +67,3 @@ def stochRSI(ohlc: pd.DataFrame, period: int,  smoothK: int, smoothD: int, colum
     stochrsi_K = stochrsi.rolling(smoothK).mean()
     stochrsi_D = stochrsi_K.rolling(smoothD).mean()
     return stochrsi_K.to_numpy(), stochrsi_D.to_numpy()
-
-###bad
-def stochastic(data, k_window, d_window, window):
-    # input to function is one column from df
-    # containing closing price or whatever value we want to extract K and D from
-
-    min_val = data.rolling(window=window, center=False).min()
-    max_val = data.rolling(window=window, center=False).max()
-
-    #stoch = ((data - min_val) / (max_val - min_val)) * 100
-
-    K = stoch.rolling(window=k_window, center=False).mean()
-    # K = stoch
-
-    D = K.rolling(window=d_window, center=False).mean()
-
-    return K, D
-
-def stoch(ohlc: pd.DataFrame,
-          period: int) -> float:
-    #calculate stochastic rsi
-    # There are fewer data points than period length -> return None
-    if len(ohlc) < period:
-        return np.nan
-    #try:
-    stoch  = (ohlc['rsi'].iloc[-1] -min(ohlc['rsi'].iloc[-period:])) / (max(ohlc['rsi'].iloc[-period:]) - min(ohlc['rsi'].iloc[-period:]))
-    #except:
-       # stoch = 0
-    return stoch
-
-def stoch_k(ohlc: pd.DataFrame,
-          smoothK: int) -> float:
-    # There are fewer data points than period length -> return None
-    if len(ohlc) < smoothK:
-        return np.nan
-    #calculate stochastic rsi k smoothed
-    stoch_k = ohlc['stoch'].iloc[-smoothK:].mean()
-    return stoch_k
-
-def stoch_d(ohlc: pd.DataFrame,
-          smoothD: int) -> float:
-    # There are fewer data points than period length -> return None
-    if len(ohlc) < smoothD:
-        return None
-    #calculate stochastic rsi k smoothed
-    stoch_d = ohlc['stoch_k'].iloc[-smoothD:].mean()
-    return stoch_d
