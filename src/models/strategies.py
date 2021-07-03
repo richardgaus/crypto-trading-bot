@@ -103,19 +103,24 @@ class RSIStoch200EMAResults(StrategyResults):
         # Draw trades and patterns
         for i, (trade, pattern) in enumerate(zip(self.trades, self.patterns)):
             # Draw divergence
-            div_prices = (
-                min(
-                    self.ohlcv.loc[pattern['divergence_timeframe'][0], 'close'],
-                    self.ohlcv.loc[pattern['divergence_timeframe'][0], 'open']
-                ), min(
-                    self.ohlcv.loc[pattern['divergence_timeframe'][1], 'close'],
-                    self.ohlcv.loc[pattern['divergence_timeframe'][1], 'open']
-                )
-            )
             div_rsi = (
                 self.ohlcv.loc[pattern['divergence_timeframe'][0], 'rsi'],
                 self.ohlcv.loc[pattern['divergence_timeframe'][1], 'rsi']
             )
+            # Bullish or bearish?
+            fun = min
+            if div_rsi[0] < div_rsi[1]:
+                fun = max
+            div_prices = (
+                fun(
+                    self.ohlcv.loc[pattern['divergence_timeframe'][0], 'close'],
+                    self.ohlcv.loc[pattern['divergence_timeframe'][0], 'open']
+                ), fun(
+                    self.ohlcv.loc[pattern['divergence_timeframe'][1], 'close'],
+                    self.ohlcv.loc[pattern['divergence_timeframe'][1], 'open']
+                )
+            )
+
 
             axes[0].plot(  # Divergence line on price plot
                 (mpl.dates.date2num(pattern['divergence_timeframe'][0]),
