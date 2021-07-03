@@ -290,7 +290,7 @@ class RSIStoch200EMA(Strategy):
                                 break
                         idx_swing_low = idx_swing_low - 1
                     # Find trade exit
-                    for idx_future in range(idx, len(ohlcv_timeseries) - 1):
+                    for idx_future in range(idx+1, len(ohlcv_timeseries) - 1):
                         # Is trade long or short?
                         long = True
                         if current_trade['stop_loss'] > current_trade['take_profit']:
