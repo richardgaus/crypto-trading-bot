@@ -15,3 +15,6 @@ notebooks/debugging
 # pycache
 */__pycache__/*
 __pycache__
+
+# Reports
+reports
