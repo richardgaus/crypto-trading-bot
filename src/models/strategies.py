@@ -373,7 +373,7 @@ class RSIStoch200EMA(Strategy):
                                 break
                         idx_swing_low = idx_swing_low - 1
                     # Find trade exit
-                    for idx_future in range(idx+1, len(ohlcv_timeseries) - 1):
+                    for idx_future in range(idx+1, len(ohlcv_timeseries)):
                         if (current_trade['long'] and current_trade['stop_loss'] > \
                             ohlcv_timeseries.iloc[idx_future]['low']) or \
                             (not current_trade['long'] and current_trade['stop_loss'] <
@@ -392,7 +392,7 @@ class RSIStoch200EMA(Strategy):
                             current_trade['win'] = True
                             open_trades_exit_times.append(idx_future)
                             break
-                        if idx_future == len(ohlcv_timeseries) - 2:
+                        if idx_future == len(ohlcv_timeseries) - 1:
                             current_trade['exit_time'] = ohlcv_timeseries.iloc[idx_future].name
                             current_trade['win'] = False
                             open_trades_exit_times.append(idx_future)
