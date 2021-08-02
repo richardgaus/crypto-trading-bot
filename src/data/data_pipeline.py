@@ -27,15 +27,25 @@ def split_timeseries(dataset, testset_length, testset_start=None, random_seed=0)
     training_set = dataset.iloc[0:testset_start].append(dataset.iloc[(testset_start+testset_units):len(dataset.index)])
     return (test_set, training_set)
 
-def evaluate_performance(pnl_history) -> (float, float):
+def evaluate_performance(pnl_history) -> dict:
     """ Evaluates PNL history considering maximum reached loss and final PNL
 
     Args:
         pnl_history:
 
     Returns:
-        Final PNL, Max. loss
+        Dict with key-item pairs:
+            final_pnl: Final PNL
+            max_loss:  Max. loss
+            aggregate: Aggregated final PNL and max. loss
     """
 
-    pass
+    return {
+        'final_pnl': 0,
+        'max_loss': 0,
+        'aggregate': aggregate_pnl_loss(0, 0)
+    }
 
+def aggregate_pnl_loss(final_pnl:float,
+                       max_loss:float) -> float:
+    return 0
