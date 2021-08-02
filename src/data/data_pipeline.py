@@ -5,7 +5,7 @@ from random import seed
 from random import random
 import random
 
-from skopt.space import Dimension, Real, Integer
+from skopt.space import Dimension
 from skopt import gp_minimize
 from skopt.utils import use_named_args
 
@@ -55,7 +55,9 @@ def optimize_hyperparameters(dataset:pd.DataFrame,
         verbose=True
     )
 
-    return tuned_hps.x
+    keys = [dim.name for dim in hp_search_space]
+    values = tuned_hps.x
+    return dict(zip(keys, values))
 
 def split_timeseries(dataset, testset_length, testset_start=None, random_seed=0) -> (pd.DataFrame, pd.DataFrame):
     if type(testset_length) is int:
@@ -71,7 +73,7 @@ def split_timeseries(dataset, testset_length, testset_start=None, random_seed=0)
 
     test_set = dataset.iloc[testset_start:(testset_start+testset_units)]
     training_set = dataset.iloc[0:testset_start].append(dataset.iloc[(testset_start+testset_units):len(dataset.index)])
-    return (test_set, training_set)
+    return test_set, training_set
 
 
 def evaluate_performance(pnl_history:pd.Series) -> dict:
