@@ -14,16 +14,6 @@ def optimize_hyperparameters(dataset, hyperparameter_space, num_calls) -> dict:
 def split_timeseries(dataset, testset_length, testset_start=None, random_seed=0) -> (pd.DataFrame, pd.DataFrame):
     if type(testset_length) is int:
         # number of units
-<<<<<<< HEAD
-        pass
-    elif type(testset_length) is float:
-        # percentage from whole dataset
-        pass
-
-    if testset_start is None:
-        # select random testset_start
-        pass
-=======
         testset_units = testset_length
     elif type(testset_length) is float:
         # percentage from whole dataset
@@ -36,7 +26,7 @@ def split_timeseries(dataset, testset_length, testset_start=None, random_seed=0)
     test_set = dataset.iloc[testset_start:(testset_start+testset_units)]
     training_set = dataset.iloc[0:testset_start].append(dataset.iloc[(testset_start+testset_units):len(dataset.index)])
     return (test_set, training_set)
->>>>>>> 53eaeb053beecdfa61d484040cff73d01f774db2
+
 
 def evaluate_performance(pnl_history:pd.Series) -> dict:
     """ Evaluates PNL history considering maximum reached loss and final PNL
