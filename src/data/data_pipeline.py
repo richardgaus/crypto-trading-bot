@@ -12,7 +12,7 @@ from skopt.utils import use_named_args
 from src.models.strategies import Strategy
 
 
-def optimize_hyperparameters(dataset:pd.DataFrame,
+def optimize_hyperparameters(datasets:List[pd.DataFrame],
                              asset_name:str,
                              strategy:Strategy,
                              hp_search_space:List[Dimension],
@@ -23,7 +23,7 @@ def optimize_hyperparameters(dataset:pd.DataFrame,
     Optimize hyperparameters using Bayesian optimization and return best setting
 
     Args:
-        dataset: OHLC timeseries
+        datasets: List of sequential OHLC timeseries
         asset_name: Name of asset
         strategy: Trading strategy
         hp_search_space: Sampling space of hyperparameters
@@ -38,13 +38,17 @@ def optimize_hyperparameters(dataset:pd.DataFrame,
     @use_named_args(dimensions=hp_search_space)
     def objective_function(**params):
         strategy_rsi = strategy(**params)
-        results = strategy_rsi.apply(
-            ohlcv_timeseries=dataset,
-            asset_name=asset_name
-        )
-        results.evaluation()
-        performance = evaluate_performance(results.pnl_history)
-        return -performance['aggregate']
+        final_pnl = 0
+        max_loss = 0
+        for dataset in datasets:
+            results = strategy_rsi.apply(
+                ohlcv_timeseries=dataset,
+                asset_name=asset_name
+            )
+            perf = evaluate_performance(results.pnl_history)
+            final_pnl = (final_pnl + 1) * (perf['final_pnl'] + 1) - 1
+            max_loss = min(max_loss, perf['max_loss'])
+        return -aggregate_pnl_loss(final_pnl=final_pnl, max_loss=max_loss)
 
     tuned_hps = gp_minimize(
         func=objective_function,
@@ -60,20 +64,18 @@ def optimize_hyperparameters(dataset:pd.DataFrame,
     return dict(zip(keys, values))
 
 def split_timeseries(dataset, testset_length, testset_start=None, random_seed=0) -> (pd.DataFrame, pd.DataFrame):
-    if type(testset_length) is int:
-        # number of units
-        testset_units = testset_length
-    elif type(testset_length) is float:
+    if type(testset_length) is float:
         # percentage from whole dataset
-        testset_units = int(round(len(dataset.index)*testset_length))
+        testset_length = int(round(len(dataset)*testset_length))
     if testset_start is None:
         # select random testset_start
         seed(random_seed)
-        testset_start = random.randint(0, len(dataset.index)-testset_units)
+        testset_start = random.randint(0, len(dataset) - testset_length - 1)
 
-    test_set = dataset.iloc[testset_start:(testset_start+testset_units)]
-    training_set = dataset.iloc[0:testset_start].append(dataset.iloc[(testset_start+testset_units):len(dataset.index)])
-    return test_set, training_set
+    test_set = dataset.iloc[testset_start:(testset_start+testset_length)]
+    training_set_1 = dataset.iloc[:testset_start]
+    training_set_2 = dataset.iloc[(testset_start+testset_length):]
+    return training_set_1, training_set_2, test_set
 
 
 def evaluate_performance(pnl_history:pd.Series) -> dict:

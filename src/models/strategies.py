@@ -421,6 +421,7 @@ class RSIStoch200EMA(Strategy):
                     results.add_trade_and_signal(**current_trade, **current_pattern)
                     wait_for_stoch_cross = False
 
+        results.evaluation()  # Evaluate results
         return results
 
 class RSIStoch200EMAResults(StrategyResults):
