@@ -120,6 +120,10 @@ class StrategyResults(ABC):
     def pnl(self):
         return self._pnl
 
+    @property
+    def pnl_history(self):
+        return self.eval_stats['pnl_history']
+
     def add_trade(self,
                   entry_time: pd.Timestamp,
                   entry_price: float,

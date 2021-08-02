@@ -17,4 +17,4 @@ notebooks/debugging
 __pycache__
 
 # Reports
-reports
+reports/*
