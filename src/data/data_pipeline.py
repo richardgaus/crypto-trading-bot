@@ -15,13 +15,16 @@ def optimize_hyperparameters(dataset, hyperparameter_space, num_calls) -> dict:
 def split_timeseries(testset_length, testset_start=None, random_seed=0) -> (pd.DataFrame, pd.DataFrame):
     if type(testset_length) is int:
         # number of units
+        pass
     elif type(testset_length) is float:
         # percentage from whole dataset
+        pass
 
     if testset_start is None:
         # select random testset_start
+        pass
 
-def evaluate_performance(pnl_history) -> dict:
+def evaluate_performance(pnl_history:pd.Series) -> dict:
     """ Evaluates PNL history considering maximum reached loss and final PNL
 
     Args:
@@ -33,13 +36,22 @@ def evaluate_performance(pnl_history) -> dict:
             max_loss:  Max. loss
             aggregate: Aggregated final PNL and max. loss
     """
+    recent_max_pnl = 0
+    max_loss = 0
+
+    for pnl in pnl_history:
+        if pnl > recent_max_pnl:
+            recent_max_pnl = pnl
+        loss = (pnl - recent_max_pnl) / (1 + recent_max_pnl)
+        if loss < max_loss:
+            max_loss = loss
 
     return {
-        'final_pnl': 0,
-        'max_loss': 0,
-        'aggregate': aggregate_pnl_loss(0, 0)
+        'final_pnl': pnl_history.iloc[-1],
+        'max_loss': max_loss,
+        'aggregate': aggregate_pnl_loss(pnl_history.iloc[-1], max_loss)
     }
 
 def aggregate_pnl_loss(final_pnl:float,
                        max_loss:float) -> float:
-    return 0
+    return - final_pnl / max_loss
