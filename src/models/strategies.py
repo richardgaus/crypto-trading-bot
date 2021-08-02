@@ -190,6 +190,23 @@ class RSIStoch200EMA(Strategy):
                  swing_low_margin: int = 2,
                  swing_low_factor: float = 0.999,
                  take_profit_factor: float = 2):
+        """
+
+        Args:
+            max_number_open_trades: Maximum number of open trades
+            min_period_to_last_low: Min. period to last RSI low / high in
+                identification of divergences
+            max_period_to_last_low: Max. period to last RSI low / high in
+                identification of divergences
+            min_absolute_slope_rsi: Min. absolute value of slope on RSI for
+                determining divergences
+            swing_low_margin: Margin where not lower / higher values on price
+                action must occur for price to qualify as swing low / high
+            swing_low_factor: Swing low is multiplied by this factor when
+                determining stop loss when placing longs
+            take_profit_factor: Multiply distance from entry to stop loss by
+                this factor to get take profit target
+        """
         super().__init__(max_number_open_trades)
         self.min_period_to_last_low = min_period_to_last_low
         self.max_period_to_last_low = max_period_to_last_low

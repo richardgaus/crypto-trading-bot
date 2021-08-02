@@ -1,15 +1,61 @@
-import pandas as pd
+from typing import List
 
-# seed the pseudorandom number generator
+import pandas as pd
 from random import seed
 from random import random
-from skopt.space import Dimension, Real
 import random
 
+from skopt.space import Dimension, Real, Integer
+from skopt import gp_minimize
+from skopt.utils import use_named_args
 
-def optimize_hyperparameters(dataset, hyperparameter_space, num_calls) -> dict:
-    tuned_hps = None
-    return tuned_hps
+from src.models.strategies import Strategy
+
+
+def optimize_hyperparameters(dataset:pd.DataFrame,
+                             asset_name:str,
+                             strategy:Strategy,
+                             hp_search_space:List[Dimension],
+                             initial_params:List,
+                             num_calls:int,
+                             random_state:int=0) -> dict:
+    """
+    Optimize hyperparameters using Bayesian optimization and return best setting
+
+    Args:
+        dataset: OHLC timeseries
+        asset_name: Name of asset
+        strategy: Trading strategy
+        hp_search_space: Sampling space of hyperparameters
+        initial_params: Initial values of hyperparameters
+        num_calls: Number of function calls
+        random_stat: Random state
+
+    Returns:
+        dict with optimized hyperparameter values
+    """
+
+    @use_named_args(dimensions=hp_search_space)
+    def objective_function(**params):
+        strategy_rsi = strategy(**params)
+        results = strategy_rsi.apply(
+            ohlcv_timeseries=dataset,
+            asset_name=asset_name
+        )
+        results.evaluation()
+        performance = evaluate_performance(results.pnl_history)
+        return -performance['aggregate']
+
+    tuned_hps = gp_minimize(
+        func=objective_function,
+        dimensions=hp_search_space,
+        x0=initial_params,
+        n_calls=num_calls,
+        random_state=random_state,
+        verbose=True
+    )
+
+    return tuned_hps.x
 
 def split_timeseries(dataset, testset_length, testset_start=None, random_seed=0) -> (pd.DataFrame, pd.DataFrame):
     if type(testset_length) is int:
@@ -49,6 +95,8 @@ def evaluate_performance(pnl_history:pd.Series) -> dict:
         loss = (pnl - recent_max_pnl) / (1 + recent_max_pnl)
         if loss < max_loss:
             max_loss = loss
+    if max_loss == 0:
+        max_loss = 0.000001
 
     return {
         'final_pnl': pnl_history.iloc[-1],
