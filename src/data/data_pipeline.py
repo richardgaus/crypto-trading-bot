@@ -21,15 +21,25 @@ def split_timeseries(testset_length, testset_start=None, random_seed=0) -> (pd.D
     if testset_start is None:
         # select random testset_start
 
-def evaluate_performance(pnl_history) -> (float, float):
+def evaluate_performance(pnl_history) -> dict:
     """ Evaluates PNL history considering maximum reached loss and final PNL
 
     Args:
         pnl_history:
 
     Returns:
-        Final PNL, Max. loss
+        Dict with key-item pairs:
+            final_pnl: Final PNL
+            max_loss:  Max. loss
+            aggregate: Aggregated final PNL and max. loss
     """
 
-    pass
+    return {
+        'final_pnl': 0,
+        'max_loss': 0,
+        'aggregate': aggregate_pnl_loss(0, 0)
+    }
 
+def aggregate_pnl_loss(final_pnl:float,
+                       max_loss:float) -> float:
+    return 0
