@@ -1,20 +1,20 @@
 import pandas as pd
 
+# seed the pseudorandom number generator
+from random import seed
+from random import random
 from skopt.space import Dimension, Real
+import random
 
-space = [
-    Real(10 ** -5, 1.25, "log-uniform", name='learning_rate'),
-    Real(10 ** -6, 4096, "log-uniform", name='alpha'),  # L1 regularization term on weights
-    Real(10 ** -6, 2048, "log-uniform", name='lambda')  # L2 regularization term on weights
-]
 
 def optimize_hyperparameters(dataset, hyperparameter_space, num_calls) -> dict:
     tuned_hps = None
     return tuned_hps
 
-def split_timeseries(testset_length, testset_start=None, random_seed=0) -> (pd.DataFrame, pd.DataFrame):
+def split_timeseries(dataset, testset_length, testset_start=None, random_seed=0) -> (pd.DataFrame, pd.DataFrame):
     if type(testset_length) is int:
         # number of units
+<<<<<<< HEAD
         pass
     elif type(testset_length) is float:
         # percentage from whole dataset
@@ -23,6 +23,20 @@ def split_timeseries(testset_length, testset_start=None, random_seed=0) -> (pd.D
     if testset_start is None:
         # select random testset_start
         pass
+=======
+        testset_units = testset_length
+    elif type(testset_length) is float:
+        # percentage from whole dataset
+        testset_units = int(round(len(dataset.index)*testset_length))
+    if testset_start is None:
+        # select random testset_start
+        seed(random_seed)
+        testset_start = random.randint(0, len(dataset.index)-testset_units)
+
+    test_set = dataset.iloc[testset_start:(testset_start+testset_units)]
+    training_set = dataset.iloc[0:testset_start].append(dataset.iloc[(testset_start+testset_units):len(dataset.index)])
+    return (test_set, training_set)
+>>>>>>> 53eaeb053beecdfa61d484040cff73d01f774db2
 
 def evaluate_performance(pnl_history:pd.Series) -> dict:
     """ Evaluates PNL history considering maximum reached loss and final PNL
